@@ -9,6 +9,7 @@ import {PrerenderData} from "common/PrerenderData.jsm";
 import React from "react";
 import {Search} from "content-src/components/Search/Search";
 import {Sections} from "content-src/components/Sections/Sections";
+import {StartupOverlay} from "content-src/components/StartupOverlay/StartupOverlay";
 import {TopSites} from "content-src/components/TopSites/TopSites";
 
 // Add the locale data for pluralization and relative-time formatting for now,
@@ -78,24 +79,27 @@ export class BaseContent extends React.PureComponent {
     const outerClassName = `outer-wrapper${shouldBeFixedToTop ? " fixed-to-top" : ""} ${prefs.enableWideLayout ? "wide-layout-enabled" : "wide-layout-disabled"}`;
 
     return (
-        <div className={outerClassName}>
-          <main>
-            {prefs.showSearch &&
-              <ErrorBoundary>
-                <Search />
-              </ErrorBoundary>}
-            <div className={`body-wrapper${(initialized ? " on" : "")}`}>
-              {!prefs.migrationExpired && <ManualMigration />}
-              {prefs.showTopSites && <TopSites />}
-              <Sections />
-            </div>
-            <ConfirmDialog />
-          </main>
-          {initialized &&
-            <div className="prefs-pane">
-              <ErrorBoundary className="sidebar"> <PreferencesPane /> </ErrorBoundary>
-            </div>
-          }
+      <div>
+        <StartupOverlay />
+          <div className={outerClassName}>
+            <main>
+              {prefs.showSearch &&
+                <ErrorBoundary>
+                  <Search />
+                </ErrorBoundary>}
+              <div className={`body-wrapper${(initialized ? " on" : "")}`}>
+                {!prefs.migrationExpired && <ManualMigration />}
+                {prefs.showTopSites && <TopSites />}
+                <Sections />
+              </div>
+              <ConfirmDialog />
+            </main>
+            {initialized &&
+              <div className="prefs-pane">
+                <ErrorBoundary className="sidebar"> <PreferencesPane /> </ErrorBoundary>
+              </div>
+            }
+          </div>
         </div>);
   }
 }

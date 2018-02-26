@@ -170,17 +170,17 @@ function templateHTML(options, html) {
   const debugString = options.debug ? "-dev" : "";
   const scripts = [
     "chrome://browser/content/contentSearchUI.js",
-    `${options.baseUrl}vendor/react${debugString}.js`,
-    `${options.baseUrl}vendor/react-dom${debugString}.js`,
-    `${options.baseUrl}vendor/prop-types.js`,
-    `${options.baseUrl}vendor/react-intl.js`,
-    `${options.baseUrl}vendor/redux.js`,
-    `${options.baseUrl}vendor/react-redux.js`,
-    `${options.baseUrl}prerendered/${options.locale}/activity-stream-strings.js`,
-    `${options.baseUrl}data/content/activity-stream.bundle.js`
+    `vendor/react${debugString}.js`,
+    `vendor/react-dom${debugString}.js`,
+    `vendor/prop-types.js`,
+    `vendor/react-intl.js`,
+    `vendor/redux.js`,
+    `vendor/react-redux.js`,
+    `prerendered/${options.locale}/activity-stream-strings.js`,
+    `data/content/activity-stream.bundle.js`
   ];
   if (isPrerendered) {
-    scripts.unshift(`${options.baseUrl}prerendered/static/activity-stream-initial-state.js`);
+    scripts.unshift(`prerendered/static/activity-stream-initial-state.js`);
   }
   return `<!doctype html>
 <html lang="${options.locale}" dir="${options.direction}">
@@ -188,9 +188,10 @@ function templateHTML(options, html) {
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy-Report-Only" content="script-src 'unsafe-inline'; img-src http: https: data: blob:; style-src 'unsafe-inline'; child-src 'none'; object-src 'none'; report-uri https://tiles.services.mozilla.com/v4/links/activity-stream/csp">
     <title>${options.strings.newtab_page_title}</title>
+    <base href=${options.baseUrl}>
     <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
-    <link rel="stylesheet" href="${options.baseUrl}css/activity-stream.css" />
+    <link rel="stylesheet" href="css/activity-stream.css"/>
   </head>
   <body class="activity-stream">
     <div id="root">${isPrerendered ? html : ""}</div>

@@ -81,26 +81,26 @@ export class BaseContent extends React.PureComponent {
     return (
       <div>
         <StartupOverlay />
-          <div className={outerClassName}>
-            <main>
-              {prefs.showSearch &&
-                <ErrorBoundary>
-                  <Search />
-                </ErrorBoundary>}
-              <div className={`body-wrapper${(initialized ? " on" : "")}`}>
-                {!prefs.migrationExpired && <ManualMigration />}
-                {prefs.showTopSites && <TopSites />}
-                <Sections />
-              </div>
-              <ConfirmDialog />
-            </main>
-            {initialized &&
-              <div className="prefs-pane">
-                <ErrorBoundary className="sidebar"> <PreferencesPane /> </ErrorBoundary>
-              </div>
-            }
-          </div>
-        </div>);
+        <div className={outerClassName}>
+          <main>
+            {prefs.showSearch &&
+              <ErrorBoundary>
+                <Search />
+              </ErrorBoundary>}
+            <div className={`body-wrapper${(initialized ? " on" : "")}`}>
+              {!prefs.migrationExpired && <ManualMigration />}
+              {prefs.showTopSites && <TopSites />}
+              <Sections />
+            </div>
+            <ConfirmDialog />
+          </main>
+          {initialized &&
+            <div className="prefs-pane">
+              <ErrorBoundary className="sidebar"> <PreferencesPane /> </ErrorBoundary>
+            </div>
+          }
+        </div>
+      </div>);
   }
 }
 

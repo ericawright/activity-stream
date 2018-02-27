@@ -1,4 +1,3 @@
-
 export const vertexShader = `
   precision lowp float;
   const float PI = 3.14159;
@@ -74,7 +73,6 @@ export const vertexShader = `
    }
 `;
 
-
 export const fragmentShader = `
   precision lowp float;
 
@@ -103,9 +101,9 @@ export const fragmentShader = `
 
 export function resizeCanvasToDisplaySize(canvas, multiplier) {
   multiplier = multiplier || 1;
-  let width  = canvas.clientWidth  * multiplier | 0;
+  let width  = canvas.clientWidth * multiplier | 0;
   let height = canvas.clientHeight * multiplier | 0;
-  if (canvas.width !== width ||  canvas.height !== height) {
+  if (canvas.width !== width || canvas.height !== height) {
     canvas.width  = width;
     canvas.height = height;
     return true;
@@ -119,11 +117,11 @@ export function setRectangle(gl, x, y, width, height) {
   let y1 = y;
   let y2 = y + height;
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-     x1, y1,
-     x2, y1,
-     x1, y2,
-     x1, y2,
-     x2, y1,
-     x2, y2,
+    x1, y1,
+    x2, y1,
+    x1, y2,
+    x1, y2,
+    x2, y1,
+    x2, y2
   ]), gl.STATIC_DRAW);
 }

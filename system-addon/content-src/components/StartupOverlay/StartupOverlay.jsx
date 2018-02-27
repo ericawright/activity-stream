@@ -1,19 +1,13 @@
+import {fragmentShader, resizeCanvasToDisplaySize, setRectangle, vertexShader} from "./webgl-utils";
+import {allWaves, quantumLogo, signIn} from "./image-addresses.js";
 import {connect} from "react-redux";
 import {injectIntl} from "react-intl";
 import React from "react";
-import {vertexShader, fragmentShader, setRectangle, resizeCanvasToDisplaySize} from "./webgl-utils";
-// import waves from '../../../data/content/assets/wave1-2048.png';
-import waves from "./image-addresses.js";
 
 export class _StartupOverlay extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.canvas = null;
-  }
-
   attachGL(canvas) {
-    let scene = document.getElementById('scene');
-    scene.dataset.content = 'true';
+    let scene = document.querySelector(".firstrun-scene");
+    scene.dataset.content = "true";
 
     let gl = canvas.getContext("webgl");
     let program = gl.createProgram();
@@ -24,8 +18,7 @@ export class _StartupOverlay extends React.PureComponent {
 
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
       // Something went wrong during compilation; get the error
-      console.log('error in vert')
-      throw "could not compile shader:" + gl.getShaderInfoLog(vertShader);
+      throw gl.getShaderInfoLog(vertShader);
     }
 
     let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -33,11 +26,11 @@ export class _StartupOverlay extends React.PureComponent {
     gl.compileShader(fragShader);
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
       // Something went wrong during compilation; get the error
-      throw "could not compile shader:" + gl.getShaderInfoLog(fragShader);
+      throw gl.getShaderInfoLog(fragShader);
     }
 
     gl.attachShader(program, fragShader);
-    gl.attachShader(program, vertShader); 
+    gl.attachShader(program, vertShader);
     gl.linkProgram(program);
     gl.useProgram(program);
 
@@ -52,18 +45,19 @@ export class _StartupOverlay extends React.PureComponent {
     setRectangle(gl, 0, 0, canvas.width, canvas.height);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 
-    // provide texture coordinates for the rectangle.
+    // Provide texture coordinates for the rectangle.
     let texcoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        0.0,  0.0,
-        1.0,  0.0,
-        0.0,  1.0,
-        0.0,  1.0,
-        1.0,  0.0,
-        1.0,  1.0,
+      0.0,  0.0,
+      1.0,  0.0,
+      0.0,  1.0,
+      0.0,  1.0,
+      1.0,  0.0,
+      1.0,  1.0
     ]), gl.STATIC_DRAW);
 
+    // Wave uniforms
     let resolutionLocation = gl.getUniformLocation(program, "u_resolution");
     let initialLocation = gl.getUniformLocation(program, "u_coord");
     let scaleBaseLocation = gl.getUniformLocation(program, "u_scale_base");
@@ -75,7 +69,7 @@ export class _StartupOverlay extends React.PureComponent {
     let sizeLocation = gl.getUniformLocation(program, "u_size");
     let offsetLocation = gl.getUniformLocation(program, "u_offset");
 
-    //spin uniforms
+    // Spin uniforms
     let spinTimerLocation = gl.getUniformLocation(program, "u_spin_timer");
     let spinDegreesLocation = gl.getUniformLocation(program, "u_degrees");
     let spinTranslateLocation = gl.getUniformLocation(program, "u_spin_translate");
@@ -95,11 +89,16 @@ export class _StartupOverlay extends React.PureComponent {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     // Tell the position attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-    let size = 2;          // 2 components per iteration
-    let type = gl.FLOAT;   // the data is 32bit floats
-    let normalize = false; // don't normalize the data
-    let stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-    let offset = 0;        // start at the beginning of the buffer
+    // 2 components per iteration
+    let size = 2;
+    // the data is 32bit floats
+    let type = gl.FLOAT;
+    // don't normalize the data
+    let normalize = false;
+    // 0 = move forward size * sizeof(type) each iteration to get the next position
+    let stride = 0;
+    // start at the beginning of the buffer
+    let offset = 0;
     gl.vertexAttribPointer(
         positionLocation, size, type, normalize, stride, offset);
 
@@ -111,9 +110,9 @@ export class _StartupOverlay extends React.PureComponent {
     // set the resolution
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
     gl.uniform1i(imageLocation, 0);
-    gl.uniform2f(sizeLocation, .275, .275); // Width  and height of each image
+    gl.uniform2f(sizeLocation, 0.275, 0.275); // Width  and height of each image
 
-    let drawWaves = function (time, movement) {
+    let drawWaves = function(time, movement) {
       gl.uniform2f(offsetLocation, movement.offSetX, movement.offSetY);
       gl.uniform2f(scaleBaseLocation, movement.xScaleBase, movement.yScaleBase);
       gl.uniform2f(scaleVarienceLocation, movement.xScaleVarience, movement.yScaleVarience);
@@ -122,7 +121,7 @@ export class _StartupOverlay extends React.PureComponent {
       gl.uniform2f(translateLocation, movement.translateX, movement.translateY);
       gl.uniform1f(timeLocation, ((time * movement.speed) + movement.delay) % movement.period);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
-    }
+    };
 
     let wave1Movement = {
       texture: 0,
@@ -146,8 +145,8 @@ export class _StartupOverlay extends React.PureComponent {
       spin_radians: 4.0,
       spin_translateX: 0.9,
       spin_translateY: 1.4,
-      spin_speed: 0.002,
-    }
+      spin_speed: 0.002
+    };
 
     let wave2Movement = {
       texture: 1,
@@ -166,13 +165,13 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.0016,
       period: 11,
-      
+
       spin_delay: -1.0,
       spin_radians: 0.0,
       spin_translateX: 0.1,
       spin_translateY: -0.8,
-      spin_speed: 0.0028,
-    }
+      spin_speed: 0.0028
+    };
 
     let wave3Movement = {
       texture: 2,
@@ -191,13 +190,13 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.0011,
       period: 11,
-      
+
       spin_delay: -1.0,
       spin_radians: 2.1,
-      spin_translateX: 0.25,
-      spin_translateY: 0.25,
-      spin_speed: 0.0027,
-    }
+      spin_translateX: 0.4,
+      spin_translateY: 0.28,
+      spin_speed: 0.0027
+    };
 
     let wave4Movement = {
       texture: 3,
@@ -216,15 +215,14 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.00018,
       period: 11,
-      zindex: .7,
-      
+
       spin_delay: -1.0,
       spin_radians: 0.5,
       spin_translateX: 0.4,
       spin_translateY: -0.3,
-      spin_speed: 0.0026,
-    }
-    
+      spin_speed: 0.0026
+    };
+
     let wave5Movement = {
       offSetX: 0.35,
       offSetY: 0.38,
@@ -241,14 +239,14 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.0005,
       period: (4 * Math.PI),
-      
+
       spin_delay: -1.0,
       spin_radians: 1.4,
       spin_translateX: 0.8,
       spin_translateY: -0.3,
-      spin_speed: 0.0025,
-    }
-    
+      spin_speed: 0.0025
+    };
+
     let wave6Movement = {
       texture: 5,
       offSetX: 0.68,
@@ -266,18 +264,18 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.00048,
       period: (4 * Math.PI),
-      
+
       spin_delay: -1.0,
       spin_radians: 2.0,
       spin_translateX: -0.6,
-      spin_translateY: -0.0,
-      spin_speed: 0.0026,
-    }
-    
+      spin_translateY: -0.3,
+      spin_speed: 0.0026
+    };
+
     let wave7Movement = {
       texture: 6,
       offSetX: 0.04,
-      offSetY: .69,
+      offSetY: 0.69,
       xScaleBase: 0.8,
       yScaleBase: 1.0,
       xScaleVarience: 0.1,
@@ -291,18 +289,18 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.0006,
       period: (4 * Math.PI),
-      
+
       spin_delay: -1.0,
       spin_radians: 3.0,
       spin_translateX: -0.4,
-      spin_translateY: -0.2,
-      spin_speed: 0.0025,
-    }
-    
+      spin_translateY: -0.4,
+      spin_speed: 0.0025
+    };
+
     let wave8Movement = {
       texture: 7,
-      offSetX: .37,
-      offSetY: .69,
+      offSetX: 0.37,
+      offSetY: 0.69,
       texture_offset: 0.0,
       xScaleBase: 1.5,
       yScaleBase: 0.8,
@@ -317,25 +315,24 @@ export class _StartupOverlay extends React.PureComponent {
       delay: 4.5,
       speed: 0.00051,
       period: (4 * Math.PI),
-      
+
       spin_delay: -1.0,
       spin_radians: 2.0,
-      spin_translateX: -0.4,
-      spin_translateY: -0.1,
-      spin_speed: 0.002,
-    }
+      spin_translateX: -0.45,
+      spin_translateY: -0.6,
+      spin_speed: 0.002
+    };
 
     let imagesLoaded = function() {
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.enable(gl.BLEND);
       gl.disable(gl.DEPTH_TEST);
-    
+
       let myReq;
-      let oldTime = 0;
       let waveStartTime = performance.now();
       let waveDeltaTime = 0;
-      
-      function clipAndPosition(time) {
+
+      function animate(time) {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         waveDeltaTime = time - waveStartTime;
         drawWaves(waveDeltaTime, wave1Movement);
@@ -346,18 +343,19 @@ export class _StartupOverlay extends React.PureComponent {
         drawWaves(waveDeltaTime, wave6Movement);
         drawWaves(waveDeltaTime, wave7Movement);
         drawWaves(waveDeltaTime, wave8Movement);
-      }
 
-      function animate(time) {
-        clipAndPosition(time); // clip and move
         myReq = window.requestAnimationFrame(animate);
       }
       requestAnimationFrame(animate);
 
       // Change to rotation/spin shaders on click
-      function handleClick () {
-        scene.dataset.signIn = 'true';
-        function drawWaveSpin (time, movement) {
+      function handleClick() {
+        scene.dataset.signIn = "true";
+        setTimeout(() => {
+          document.querySelector(".test-wrapper").style.display = "none";
+        }, 1200);
+
+        function drawWaveSpin(time, movement) {
           gl.uniform2f(offsetLocation, movement.offSetX, movement.offSetY);
           gl.uniform2f(scaleBaseLocation, movement.xScaleBase, movement.yScaleBase);
           gl.uniform2f(scaleVarienceLocation, movement.xScaleVarience, movement.yScaleVarience);
@@ -365,7 +363,7 @@ export class _StartupOverlay extends React.PureComponent {
           gl.uniform2f(initialLocation, movement.initialX, movement.initialY);
           gl.uniform2f(translateLocation, movement.translateX, movement.translateY);
           gl.uniform1f(timeLocation, ((waveDeltaTime * movement.speed) + movement.delay) % movement.period);
-        
+
           // spin uniforms
           gl.uniform1f(spinTimerLocation, (time * movement.spin_speed) + movement.spin_delay);
           gl.uniform2f(spinTranslateLocation, movement.spin_translateX, movement.spin_translateY);
@@ -390,33 +388,33 @@ export class _StartupOverlay extends React.PureComponent {
           drawWaveSpin(deltaTime, wave8Movement);
           window.requestAnimationFrame(spinOutAnimation);
         }
-        
+
         cancelAnimationFrame(myReq);
         spinOutAnimation(startTime);
       }
-      document.onclick = handleClick;
-    }
+      document.querySelector(".firstrun-sign-in").onclick = handleClick;
+    };
 
     let textures = [];
     function initImages() {
       let images = [];
       let urls = [
-        waves.wavesbwpng
+        allWaves
       ];
       let imagesToLoad = urls.length;
 
       function loadImage(url, callback) {
         let image = new Image();
-        image.onload = callback
+        image.onload = callback;
         image.src = url;
         return image;
       }
 
       let onImageLoad = function(event) {
         --imagesToLoad;
-        
+
         let image_index = urls.indexOf(event.target.attributes.src.value);
-        
+
         let texture = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0 + image_index);
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -431,14 +429,13 @@ export class _StartupOverlay extends React.PureComponent {
 
         // add the texture to the array of textures.
         textures[image_index] = texture;
-        
+
         // If all the images are loaded call imagesLoaded.
-        if (imagesToLoad == 0) {
-          console.log('after all images loaded');
+        if (imagesToLoad === 0) {
           imagesLoaded();
         }
       };
-    
+
       for (let i = 0; i < urls.length; ++i) {
         let image = loadImage(urls[i], onImageLoad);
         images.push(image);
@@ -447,9 +444,6 @@ export class _StartupOverlay extends React.PureComponent {
 
     initImages();
   }
-  handleSignIn() {
-    
-  }
 
   render() {
     return (
@@ -457,17 +451,24 @@ export class _StartupOverlay extends React.PureComponent {
         <canvas className="canvas" ref={this.attachGL}>
           HTML5 is not supported.
         </canvas>
-        <div id="scene">
-          <div class="fxaccounts-container">
-            <div id="left-divider">
-              <div id="firefox-logo"></div>
-              <h1 id="title">Already using Firefox?</h1>
-              <p class="content">Sign in to your account and we’ll sync the bookmarks, passwords and other great things you’ve saved to Firefox on other devices.</p>
-              <a href="https://www.mozilla.org/en-US/firefox/features/sync/"target="_blank">Learn more about Firefox Accounts</a>
+        <div className="firstrun-scene">
+          <div className="fxaccounts-container">
+            <div className="firstrun-left-divider">
+              <img className="firstrun-firefox-logo" src={quantumLogo} />
+              <h1 className="firstrun-title">Already using Firefox?</h1>
+              <p className="firstrun-content">Sign in to your account and we’ll sync the bookmarks, passwords and other great things you’ve saved to Firefox on other devices.</p>
+              <a className="firstrun-link" href="https://www.mozilla.org/en-US/firefox/features/sync/"target="_blank" rel="noopener noreferrer">Learn more about Firefox Accounts</a>
             </div>
-            <div class="fxaccounts" id="fxa-iframe-config">
-            click here
-            </div>
+            <img className="firstrun-sign-in" src={signIn} />
+            {/* <form method="get" action="https://accounts.firefox.com">
+              <input name="service" type="hidden" value="sync"/>
+              <input name="forceExperiment" type="hidden" value="emailFirst"/>
+              <input name="forceExperimentGroup" type="hidden" value="treatment"/>
+              <input name="context" type="hidden" value="fx_desktop_v3"/>
+              <input name="email" type="text"/>
+              <button type="submit">Login to Sync</button>
+            </form> */}
+
           </div>
         </div>
       </div>

@@ -99,10 +99,9 @@ export const fragmentShader = `
   }
 `;
 
-export function resizeCanvasToDisplaySize(canvas, multiplier) {
-  multiplier = multiplier || 1;
-  let width = canvas.clientWidth * multiplier | 0;
-  let height = canvas.clientHeight * multiplier | 0;
+export function resizeCanvasToDisplaySize(canvas) {
+  let width = canvas.clientWidth | 0;
+  let height = canvas.clientHeight | 0;
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;

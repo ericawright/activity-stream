@@ -73,8 +73,7 @@ export class BaseContent extends React.PureComponent {
     const {App} = props;
     const {initialized} = App;
     const prefs = props.Prefs.values;
-debugger;
-    // console.log("location ", document.location);
+    const showOverlay = this.props.isFirstrun ? <StartupOverlay /> : null;
 
     const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
 
@@ -82,7 +81,6 @@ debugger;
 
     return (
       <div>
-        {prefs.firstrun && <StartupOverlay />}
         <div className={outerClassName}>
           <main>
             {prefs.showSearch &&
@@ -102,6 +100,7 @@ debugger;
             </div>
           }
         </div>
+        {showOverlay}
       </div>);
   }
 }

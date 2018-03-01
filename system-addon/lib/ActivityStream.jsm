@@ -35,16 +35,11 @@ const DEFAULT_SITES = new Map([
   ["FR", "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.amazon.fr/,https://www.leboncoin.fr/,https://twitter.com/"]
 ]);
 const GEO_PREF = "browser.search.region";
-const FIRSTRUN_PREF = "browser.startup.is_firstrun";
 const REASON_ADDON_UNINSTALL = 6;
 
 // Configure default Activity Stream prefs with a plain `value` or a `getValue`
 // that computes a value. A `value_local_dev` is used for development defaults.
 const PREFS_CONFIG = new Map([
-  ['firstrun', {
-    title: "boolean indicating if this is the first time the browser has been used",
-    getValue: () => Services.prefs.getBoolPref('browser.startup.is_firstrun')
-  }],
   ["default.sites", {
     title: "Comma-separated list of default top sites to fill in behind visited sites",
     getValue: ({geo}) => DEFAULT_SITES.get(DEFAULT_SITES.has(geo) ? geo : "")
@@ -295,11 +290,9 @@ this.ActivityStream = class ActivityStream {
   }
 
   _updateDynamicPrefs() {
-    Services.prefs.addObserver(FIRSTRUN_PREF, this);
     // Save the geo pref if we have it
     if (Services.prefs.prefHasUserValue(GEO_PREF)) {
       this.geo = Services.prefs.getStringPref(GEO_PREF);
-      console.log("location", Services.prefs.getStringPref(GEO_PREF));
     } else if (this.geo !== "") {
       // Watch for geo changes and use a dummy value for now
       Services.prefs.addObserver(GEO_PREF, this);
@@ -312,10 +305,8 @@ this.ActivityStream = class ActivityStream {
     for (const pref of PREFS_CONFIG.keys()) {
       const prefConfig = PREFS_CONFIG.get(pref);
       if (!prefConfig.getValue) {
-        console.log('skipping', pref)
         continue;
       }
-      console.log("pref ", pref, prefConfig)
 
       const newValue = prefConfig.getValue({
         geo: this.geo,
@@ -339,10 +330,6 @@ this.ActivityStream = class ActivityStream {
         if (data === GEO_PREF) {
           this._updateDynamicPrefs();
           Services.prefs.removeObserver(GEO_PREF, this);
-        } else if (data == FIRSTRUN_PREF) {
-          this._updateDynamicPrefs();
-          console.log('firstrun pref changed', subject, topic);
-          // Services.prefs.removeObserver(FIRSTRUN_PREF, this);
         }
         break;
     }

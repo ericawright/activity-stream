@@ -21,6 +21,7 @@ if (!global.gActivityStreamPrerenderedState) {
 
 ReactDOM.hydrate(<Provider store={store}>
   <Base
+    isFirstrun={new global.URL(global.document.location).search === "?firstrun=true"}
     isPrerendered={!!global.gActivityStreamPrerenderedState}
     locale={global.document.documentElement.lang}
     strings={global.gActivityStreamStrings} />

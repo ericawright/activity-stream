@@ -62,9 +62,6 @@ this.PrefsFeed = class PrefsFeed {
     for (const name of this._prefMap.keys()) {
       values[name] = this._prefs.get(name);
     }
-    console.log(values["firstrun"], "before manual setting")
-    // fetch pref, if it doesn't exist, it is not the firstrun. Set to false after using once.
-    Services.prefs.setBoolPref('browser.startup.is_firstrun', false); 
 
     // Set the initial state of all prefs in redux
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));

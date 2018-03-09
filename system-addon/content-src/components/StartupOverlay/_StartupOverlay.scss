@@ -4,6 +4,112 @@
   width: 100vw;
   height: 100vh;
   z-index: 100;
+  font-family: "Fira Sans",Helvetica,Arial,sans-serif;
+}
+
+html.no-gl {
+  .canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-image: url('#{$image-path}all_waves.svg');
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+  
+.firstrun-sign-in {
+  transform: translateY(-50%) scale(0.8);
+  position: relative;
+  top: 50%;
+  width: 358px;
+  opacity: 0;
+  background-color: white;
+  float: right;
+  color: #0A0F1D;
+  text-align: center;
+  padding: 10px;
+  
+  .extra-links {
+    font-size: 12px;
+    max-width: 340px;
+    margin: 14px 50px;
+    color: #676F7E;
+    cursor: default;
+    
+    a {
+      color: #737373;
+      cursor: pointer;
+    }
+    
+    a:hover,
+    a:active,
+    a:focus {
+      color: #0a84ff;
+    }
+  }
+
+  input[type="email"] {
+    margin: auto;
+    width: 244px;
+    display: block;
+    height: 40px;
+    padding: 0 0 0 20px;
+    border: 1px solid #737373;
+    border-radius: 2px;
+    font-size: 16px;
+  }
+  
+  input[type="email"]:hover {
+    border-color: #0c0c0d;
+  }
+  
+  .form-header {
+    font-size: 18px;
+    margin: 15px auto
+  }
+  
+  .form-header span {
+    font-size: 14px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  button {
+    background-color: #0a84ff;
+    color: white;
+    border-radius: 3px;
+    border: 1px solid #0060df;
+    display: block;
+    cursor: pointer;
+    margin: 10px auto 0 auto;
+    padding: 5px 10px;
+  }
+  
+  .continue-button {
+    font-size: 18px;
+    height: 43px;
+    width: 250px;
+  }
+
+  button:not([disabled]):hover {
+    background-color: #0670cc;
+    border-color: #005bab;
+  }
+  
+  .skip-button {
+    font-size: 13px;
+    margin-top: 40px;
+    margin-bottom: 15px;
+  }
+  
+  .skip-button[disabled] {
+    background-color: #ebebeb;
+    border-color: #b1b1b1;
+    color: #6a6a6a;
+    cursor: default;
+    opacity: .5;
+  }
 }
 
 .canvas {
@@ -56,30 +162,25 @@
   transform: translateY(-5px);
 }
 
-.firstrun-sign-in {
-  width: 358px;
-  opacity: 0;
-  transform: scale(0.8);
-}
-
 .firstrun-firefox-logo {
   background-repeat: no-repeat;
   background-size: 90px 90px;
   height: 90px;
   width: 90px;
-  transition: opacity 1s 2.3s;
   opacity: 0;
 }
 
 .firstrun-scene {
   &[data-content='true'] {
     .firstrun-sign-in {
-      transition: opacity 1s 2.5s, transform 1s 2.5s;
-      opacity: 0.85;
-      transform: scale(1);
+      transition: opacity 1.5s, transform 1.5s;
+      transition-delay: 0.2s;
+      opacity: 0.80;
+      transform: translateY(-50%) scale(1);
     }
 
     .firstrun-firefox-logo {
+      transition: opacity 2.3s;
       opacity: 1;
     }
 
@@ -90,22 +191,53 @@
       transform: translateY(0);
       opacity: 1;
     }
-
+    
     .firstrun-title {
-      transition-delay: 1.8s;
+      transition-delay: .2s;
     }
 
     .firstrun-content {
-      transition-delay: 2s;
+      transition-delay: .4s;
     }
 
     .firstrun-link {
-      transition-delay: 2.2s;
-    }
+      transition-delay: .6s;
+    }  
   }
 
   &[data-sign-in='true'] .fxaccounts-container {
     transition: opacity 0.3s;
     opacity: 0;
+  }
+}
+
+.test-wrapper.fade-out  {
+  transition: opacity .4s;
+  opacity: 0;
+}
+
+html:not(.no-gl) { 
+  .firstrun-scene {
+    &[data-content='true'] {
+      .firstrun-title {
+        transition-delay: 1.8s;
+      }
+
+      .firstrun-content {
+        transition-delay: 2s;
+      }
+
+      .firstrun-link {
+        transition-delay: 2.2s;
+      }
+      
+      .firstrun-sign-in {
+        transition-delay: 1s;
+      }
+      
+      .firstrun-firefox-logo {
+        transition-delay: 1s; 
+      }
+    }
   }
 }

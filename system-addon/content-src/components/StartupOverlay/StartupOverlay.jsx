@@ -1,4 +1,5 @@
-import {allWaves, quantumLogo, signIn} from "./image-addresses.js";
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {allWaves, quantumLogo} from "./image-addresses.js";
 import {fragmentShader, resizeCanvasToDisplaySize, setRectangle, vertexShader} from "./webgl-utils";
 import {connect} from "react-redux";
 import {injectIntl} from "react-intl";
@@ -205,8 +206,15 @@ export class _StartupOverlay extends React.PureComponent {
     this.animate = this.animate.bind(this);
     this.drawWaves = this.drawWaves.bind(this);
     this.initImages = this.initImages.bind(this);
-    this.handleClick = this.handleClick.bind(this);
+    this.removeOverlay = this.removeOverlay.bind(this);
     this.attachUniforms = this.attachUniforms.bind(this);
+    this.onInputChange = this.onInputChange.bind(this);
+    this.onSubmit = this.onSubmit.bind(this);
+    this.clickSkip = this.clickSkip.bind(this);
+    
+    this.state = {
+      emailInput: '',
+    };
   }
 
   drawWaves(waveTime, movement, spinTime) {
@@ -295,8 +303,44 @@ export class _StartupOverlay extends React.PureComponent {
   }
 
   attachGL(canvas) {
-    this.gl = canvas.getContext("webgl");
+    console.log('attach gl to canvas');
+    // Only allow Mac or Windows 8 or higher to run the webGL version.
+    if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+      document.documentElement.classList.add('mac');
+      // document.documentElement.classList.add('no-gl');
+      this.scene = document.querySelector(".firstrun-scene");
+      setTimeout(() => {
+        this.scene.dataset.content = "true";
+      }, 10);
+
+    } else if (navigator.platform.toUpperCase().indexOf('WIN') >= 0 &&
+               parseInt(navigator.oscpu.match(/Windows\ NT\ (\d+\.\d+)/)[1]) >= 6.2) {
+      document.documentElement.classList.add('win8up');
+    } else {
+      document.documentElement.classList.add('no-gl');
+      this.scene = document.querySelector(".firstrun-scene");
+      this.props.dispatch(ac.UserEvent({event: "GL_FAILED"}));
+
+      setTimeout(() => {
+        this.scene.dataset.content = "true";
+      }, 10);
+
+      return;
+    }
+
+    this.gl = canvas.getContext("webgl",
+      {failIfMajorPerformanceCaveat: true, powerPreference: "high-performance"});
     let {gl} = this;
+    if (!gl) {
+      document.documentElement.classList.add('no-gl');
+      this.props.dispatch(ac.UserEvent({event: "GL_FAILED"}));
+      console.log('failed from performance caveat');
+      return;
+    }
+    
+    // GL is enabled, send event
+    this.props.dispatch(ac.UserEvent({event: "GL_ENABLED"}));
+
     let program = gl.createProgram();
 
     // Define vertex shader
@@ -383,25 +427,47 @@ export class _StartupOverlay extends React.PureComponent {
 
     // set the resolution
     gl.uniform2f(this.locations.resolutionLocation, canvas.width, canvas.height);
-    // Width  and height of each wave
+    // Width and height of each wave
     gl.uniform2f(this.locations.sizeLocation, 0.275, 0.275);
 
     this.initImages();
   }
 
-  handleClick() {
-    // Change to spin on click
-    this.spinStartTime = performance.now();
+  removeOverlay(e) {
     this.scene.dataset.signIn = "true";
+    if (document.documentElement.classList.contains('no-gl')) {
+      document.querySelector(".test-wrapper").classList.add('fade-out');
+      setTimeout(() => {
+        document.querySelector(".test-wrapper").style.display = "none";
+      }, 400);
+      return;
+    }
+
+    // Change to spin
+    this.spinStartTime = performance.now();
     this.spin = true;
 
     // hide elements and canvas after spin finished
     setTimeout(() => {
       document.querySelector(".test-wrapper").style.display = "none";
-    }, 1200);
+    }, 1300);
 
     cancelAnimationFrame(this.animationReq);
     window.requestAnimationFrame(this.animate);
+  }
+
+  onInputChange(e) {
+    this.setState({emailInput: e.target.value});
+  }
+
+  onSubmit() {
+    this.props.dispatch(ac.UserEvent({event: "SUBMIT_EMAIL"}));
+    window.addEventListener('focus', this.removeOverlay);
+  }
+  
+  clickSkip() {
+    this.props.dispatch(ac.UserEvent({event: "CLICK_SKIP"}));
+    this.removeOverlay();
   }
 
   render() {
@@ -416,18 +482,24 @@ export class _StartupOverlay extends React.PureComponent {
               <img className="firstrun-firefox-logo" src={quantumLogo} />
               <h1 className="firstrun-title">Already using Firefox?</h1>
               <p className="firstrun-content">Sign in to your account and we’ll sync the bookmarks, passwords and other great things you’ve saved to Firefox on other devices.</p>
-              <a className="firstrun-link" href="https://www.mozilla.org/en-US/firefox/features/sync/"target="_blank" rel="noopener noreferrer">Learn more about Firefox Accounts</a>
+              <a className="firstrun-link" href="https://www.mozilla.org/en-US/firefox/features/sync/" target="_blank" rel="noopener noreferrer">Learn more about Firefox Accounts</a>
             </div>
-            <img className="firstrun-sign-in" src={signIn} onClick={this.handleClick} />
-            {/* If we use email-first flow: */}
-            {/* <form method="get" action="https://accounts.firefox.com">
-              <input name="service" type="hidden" value="sync"/>
-              <input name="forceExperiment" type="hidden" value="emailFirst"/>
-              <input name="forceExperimentGroup" type="hidden" value="treatment"/>
-              <input name="context" type="hidden" value="fx_desktop_v3"/>
-              <input name="email" type="text"/>
-              <button type="submit">Login to Sync</button>
-            </form> */}
+            <div className="firstrun-sign-in">
+              <p className="form-header">Enter your email <span>to continue to Firefox Sync</span></p>
+              <form method="get" action="https://accounts.firefox.com" target="_blank" onSubmit={this.onSubmit}>
+                <input name="service" type="hidden" value="sync"/>
+                <input name="forceExperiment" type="hidden" value="emailFirst"/>
+                <input name="forceExperimentGroup" type="hidden" value="treatment"/>
+                <input name="context" type="hidden" value="fx_desktop_v3"/>
+                <input className="email-input" name="email" type="email" required placeholder="Email" onChange={this.onInputChange}/>
+                <div className="extra-links">By proceding you agree to the
+                  <a href="https://accounts.firefox.com/legal/terms" target="_blank"> Terms of service </a>
+                  and<a target="_blank" href="https://accounts.firefox.com/legal/privacy"> Privacy Notice</a>
+                </div>
+                <button className="continue-button" type="submit">Continue</button>
+              </form>
+              <button className="skip-button" disabled={!!this.state.emailInput} onClick={this.clickSkip}>Skip this step</button>
+          </div>
           </div>
         </div>
       </div>

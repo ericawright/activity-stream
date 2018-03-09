@@ -345,7 +345,9 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   sendEvent(event_object) {
+    console.log('******* send event', event_object);
     if (this.telemetryEnabled) {
+      console.log('telemetry enabled');
       this.pingCentre.sendPing(event_object,
       {filter: ACTIVITY_STREAM_ID});
     }
@@ -356,6 +358,7 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   handleUserEvent(action) {
+    console.log('******* handle user event', action);
     let userEvent = this.createUserEvent(action);
     this.sendEvent(userEvent);
     this.utEvents.sendUserEvent(userEvent);

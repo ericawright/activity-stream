@@ -1,6 +1,6 @@
-import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {allWaves, quantumLogo} from "./image-addresses.js";
 import {fragmentShader, resizeCanvasToDisplaySize, setRectangle, vertexShader} from "./webgl-utils";
+import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
 import {injectIntl} from "react-intl";
 import React from "react";
@@ -207,14 +207,13 @@ export class _StartupOverlay extends React.PureComponent {
     this.drawWaves = this.drawWaves.bind(this);
     this.initImages = this.initImages.bind(this);
     this.removeOverlay = this.removeOverlay.bind(this);
+    this.setUpShader = this.setUpShader.bind(this);
     this.attachUniforms = this.attachUniforms.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.clickSkip = this.clickSkip.bind(this);
-    
-    this.state = {
-      emailInput: '',
-    };
+
+    this.state = {emailInput: ""};
   }
 
   drawWaves(waveTime, movement, spinTime) {
@@ -278,6 +277,18 @@ export class _StartupOverlay extends React.PureComponent {
     image.src = allWaves;
   }
 
+  setUpShader(source, type) {
+    let {gl} = this;
+    let shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      // Something went wrong during compilation; get the error
+      throw gl.getShaderInfoLog(shader);
+    }
+    return shader;
+  }
+
   attachUniforms(program) {
     let {gl} = this;
     // Standard locations
@@ -303,28 +314,20 @@ export class _StartupOverlay extends React.PureComponent {
   }
 
   attachGL(canvas) {
-    console.log('attach gl to canvas');
+    this.scene = document.querySelector(".firstrun-scene");
+    setTimeout(() => {
+      this.scene.dataset.content = "true";
+    }, 10);
+
     // Only allow Mac or Windows 8 or higher to run the webGL version.
-    if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
-      document.documentElement.classList.add('mac');
-      // document.documentElement.classList.add('no-gl');
-      this.scene = document.querySelector(".firstrun-scene");
-      setTimeout(() => {
-        this.scene.dataset.content = "true";
-      }, 10);
-
-    } else if (navigator.platform.toUpperCase().indexOf('WIN') >= 0 &&
-               parseInt(navigator.oscpu.match(/Windows\ NT\ (\d+\.\d+)/)[1]) >= 6.2) {
-      document.documentElement.classList.add('win8up');
+    if (navigator.platform.toUpperCase().includes("MAC") >= 0) {
+      document.documentElement.classList.add("mac");
+    } else if (navigator.platform.toUpperCase().includes("WIN") >= 0 &&
+               parseInt(navigator.oscpu.match(/Windows NT (\d+\.\d+)/)[1], 10) >= 6.2) {
+      document.documentElement.classList.add("win8up");
     } else {
-      document.documentElement.classList.add('no-gl');
-      this.scene = document.querySelector(".firstrun-scene");
+      document.documentElement.classList.add("no-gl");
       this.props.dispatch(ac.UserEvent({event: "GL_FAILED"}));
-
-      setTimeout(() => {
-        this.scene.dataset.content = "true";
-      }, 10);
-
       return;
     }
 
@@ -332,34 +335,17 @@ export class _StartupOverlay extends React.PureComponent {
       {failIfMajorPerformanceCaveat: true, powerPreference: "high-performance"});
     let {gl} = this;
     if (!gl) {
-      document.documentElement.classList.add('no-gl');
+      document.documentElement.classList.add("no-gl");
       this.props.dispatch(ac.UserEvent({event: "GL_FAILED"}));
-      console.log('failed from performance caveat');
       return;
     }
-    
+
     // GL is enabled, send event
     this.props.dispatch(ac.UserEvent({event: "GL_ENABLED"}));
 
     let program = gl.createProgram();
-
-    // Define vertex shader
-    let vertShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertShader, vertexShader);
-    gl.compileShader(vertShader);
-    if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-      // Something went wrong during compilation; get the error
-      throw gl.getShaderInfoLog(vertShader);
-    }
-
-    // Define fragment shader
-    let fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragShader, fragmentShader);
-    gl.compileShader(fragShader);
-    if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-      // Something went wrong during compilation; get the error
-      throw gl.getShaderInfoLog(fragShader);
-    }
+    let vertShader = this.setUpShader(vertexShader, gl.VERTEX_SHADER);
+    let fragShader = this.setUpShader(fragmentShader, gl.FRAGMENT_SHADER);
 
     gl.attachShader(program, fragShader);
     gl.attachShader(program, vertShader);
@@ -394,9 +380,6 @@ export class _StartupOverlay extends React.PureComponent {
 
     // Set clear color to transparent black
     gl.clearColor(0, 0, 0, 0);
-
-    // Tell it to use our program (pair of shaders)
-    gl.useProgram(program);
 
     gl.enableVertexAttribArray(this.locations.positionLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -435,8 +418,8 @@ export class _StartupOverlay extends React.PureComponent {
 
   removeOverlay(e) {
     this.scene.dataset.signIn = "true";
-    if (document.documentElement.classList.contains('no-gl')) {
-      document.querySelector(".test-wrapper").classList.add('fade-out');
+    if (document.documentElement.classList.contains("no-gl")) {
+      document.querySelector(".test-wrapper").classList.add("fade-out");
       setTimeout(() => {
         document.querySelector(".test-wrapper").style.display = "none";
       }, 400);
@@ -462,9 +445,9 @@ export class _StartupOverlay extends React.PureComponent {
 
   onSubmit() {
     this.props.dispatch(ac.UserEvent({event: "SUBMIT_EMAIL"}));
-    window.addEventListener('focus', this.removeOverlay);
+    window.addEventListener("focus", this.removeOverlay);
   }
-  
+
   clickSkip() {
     this.props.dispatch(ac.UserEvent({event: "CLICK_SKIP"}));
     this.removeOverlay();
@@ -486,15 +469,15 @@ export class _StartupOverlay extends React.PureComponent {
             </div>
             <div className="firstrun-sign-in">
               <p className="form-header">Enter your email <span>to continue to Firefox Sync</span></p>
-              <form method="get" action="https://accounts.firefox.com" target="_blank" onSubmit={this.onSubmit}>
-                <input name="service" type="hidden" value="sync"/>
-                <input name="forceExperiment" type="hidden" value="emailFirst"/>
-                <input name="forceExperimentGroup" type="hidden" value="treatment"/>
-                <input name="context" type="hidden" value="fx_desktop_v3"/>
-                <input className="email-input" name="email" type="email" required placeholder="Email" onChange={this.onInputChange}/>
+              <form method="get" action="https://accounts.firefox.com" target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
+                <input name="service" type="hidden" value="sync" />
+                <input name="forceExperiment" type="hidden" value="emailFirst" />
+                <input name="forceExperimentGroup" type="hidden" value="treatment" />
+                <input name="context" type="hidden" value="fx_desktop_v3" />
+                <input className="email-input" name="email" type="email" required="true" placeholder="Email" onChange={this.onInputChange} />
                 <div className="extra-links">By proceding you agree to the
-                  <a href="https://accounts.firefox.com/legal/terms" target="_blank"> Terms of service </a>
-                  and<a target="_blank" href="https://accounts.firefox.com/legal/privacy"> Privacy Notice</a>
+                  <a href="https://accounts.firefox.com/legal/terms" target="_blank" rel="noopener noreferrer"> Terms of service </a>
+                  and<a href="https://accounts.firefox.com/legal/privacy" target="_blank" rel="noopener noreferrer"> Privacy Notice</a>
                 </div>
                 <button className="continue-button" type="submit">Continue</button>
               </form>

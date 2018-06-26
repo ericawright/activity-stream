@@ -93,10 +93,14 @@
   text-align: center;
   padding: 10px;
 
+  form {
+    position: relative;
+  }
+
   .extra-links {
     font-size: 12px;
     max-width: 340px;
-    margin: 14px 50px;
+    margin: 17px 50px;
     color: #676F7E;
     cursor: default;
 
@@ -132,6 +136,14 @@
     &:focus {
       border-color: $blue-50;
       box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+    }
+
+    &.invalid {
+      border-color: $red-60;
+    }
+
+    &.invalid:focus {
+      box-shadow: 0 0 0 3px rgba(215, 0, 34, 0.3);
     }
   }
 
@@ -172,7 +184,7 @@
 
   .skip-button {
     font-size: 13px;
-    margin-top: 35px;
+    margin-top: 20px;
     margin-bottom: 20px;
     background-color: #FCFCFC;
     color: $blue-50;
@@ -283,4 +295,58 @@
 .firstrun-link {
   opacity: 0;
   transform: translateY(-5px);
+}
+
+.error {
+  display: none;
+}
+
+html[dir="rtl"] .error{
+  right: 50px;
+  left: auto;
+  
+  &::before {
+    right: 12px;
+    left: auto;
+  }
+}
+
+.error.active {
+  display: block;
+  padding: 5px 12px;
+  animation: fade-down 450ms;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  background-color: $red-60;
+  position: absolute;
+  left: 50px;
+  top: -28px;
+  border-radius: 2px;
+
+  &::before {
+    left: 12px;
+    background: $red-60;
+    bottom: -8px;
+    content: '.';
+    height: 16px;
+    position: absolute;
+    text-indent: -999px;
+    transform: rotate(45deg);
+    white-space: nowrap;
+    width: 16px;
+    z-index: -1;
+  }
+}
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
